@@ -13,79 +13,50 @@ print("opening image")
 # image = Image.open('/Users/MurphDogg/Desktop/image.png')
 image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
 
-## print("raw text from image")
-## print(rawText)
-
 print("cropping")
 originalWidth = image.size[0]
 originalHeight = image.size[1]
 oneTenthWidth = originalHeight / 10
 oneQuarterHeight = originalHeight / 4
-# print("originalWidth  " + str(originalWidth))
-# print("originalHeight  " + str(originalHeight))
-# print("new dimensions")
 x1 = oneTenthWidth
 y1 = oneQuarterHeight*.75
 x2 = (originalWidth-oneTenthWidth)
 y2 = (originalHeight-(oneQuarterHeight*2))
-# print("x1  " + str(x1))
-# print("y1  " + str(y1))
-# print("x2  " + str(x2))
-# print("y2  " + str(y2))
-
-###     1/4 height    from midline,      
-
 cropped = image.crop((x1, y1, x2, y2))
 cropped.save('/Users/MurphDogg/Desktop/cropped.png')         # need to delete this i think after finished
 
 print("finished cropping")
-# croppedImage = Image.open('/Users/MurphDogg/Desktop/cropped2.png')
 img = cv2.imread('/Users/MurphDogg/Desktop/cropped.png', 1)
 
 lab= cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 cv2.imshow("lab",lab)
 
-#-----Splitting the LAB image to different channels-------------------------
 l, a, b = cv2.split(lab)
 cv2.imshow('l_channel', l)
 cv2.imshow('a_channel', a)
 cv2.imshow('b_channel', b)
 
-#-----Applying CLAHE to L-channel-------------------------------------------
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 cl = clahe.apply(l)
 cv2.imshow('CLAHE output', cl)
 
-#-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
 limg = cv2.merge((cl,a,b))
 cv2.imshow('limg', limg)
 
-#-----Converting image from LAB Color model to RGB model--------------------
 final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 cv2.imshow('final', final)
 
 rawText = pytesseract.image_to_string(final, config ='--psm 6')
 
-
-# print("\n\nraw text -> ")
-# print(rawText)
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'setiembre', 'octubre', 'noviembre', 'diciembre']
 monthFound = False
 for month in months:
 
-    # print(rawText.find(month))
+    
     if rawText.find(month) > -1:
         monthFound = True
         if month in ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'setiembre', 'octubre', 'noviembre', 'diciembre']:
-            # extractedDate = rawText[rawText.find(month):rawText.find(month)+len(month)+25]
-            # # print("original extracted date -> " + extractedDate)
-            # strNoMonth = extractedDate[len(month):]
-            # # print(strNoMonth)
-            # strNoMonth = strNoMonth.strip()
-            # startTime = strNoMonth[:strNoMonth.find('M')+1]
-            # # print(startTime)
-            # extractedDate = month + " " + startTime
-            # # rawText = rawText[(rawText.find(extractedDate)+len(month)+21):rawText.find("\n")]
+           
             spanishMonthToEnglish = {
                 'enero': 'January',
                 'febrero': 'February',
@@ -134,13 +105,10 @@ for month in months:
                         englishDateFormat += str(hourPartOne) + ":" + str(hourPartTwo) + " PM"
                     else: 
                         englishDateFormat += str(hourPartOne) + ":" + str(hourPartTwo) + " AM"
-                    # print("Therefore, gym is in strippedText[" + str(i+1) + "]")
                     extractedGym = strippedText[i+1]
-                    # print(extractedGym)
-                    
                 else:
                     i+=1
-            # extracted_gym_name = (text[(text.find('a previous victory at')+21):text.find('Please visit the Gym')])
+
             print("\n\n\n")
             print("--------------------------------------")
             print("DATE ->    " + englishDateFormat)
@@ -150,14 +118,10 @@ for month in months:
             _DATE = englishDateFormat
         else:
             extractedDate = rawText[rawText.find(month):rawText.find(month)+len(month)+25]
-            # print("original extracted date -> " + extractedDate)
             strNoMonth = extractedDate[len(month):]
-            # print(strNoMonth)
             strNoMonth = strNoMonth.strip()
             startTime = strNoMonth[:strNoMonth.find('M')+1]
-            # print(startTime)
             extractedDate = month + " " + startTime[:-2].strip() + " " + startTime[-2:]
-            # rawText = rawText[(rawText.find(extractedDate)+len(month)+21):rawText.find("\n")]
             rawText = rawText.split("\n")
             strippedText = [line for line in rawText if line.strip()]
             print(strippedText)
@@ -166,14 +130,10 @@ for month in months:
             for chunk in strippedText:
                 
                 if month in chunk:
-                    # print("month found in strippedText[" + str(i) + "]")
-                    # print(strippedText[i])
-                    # print("Therefore, gym is in strippedText[" + str(i+1) + "]")
                     extractedGym = strippedText[i+1]
-                    # print(extractedGym)
                 else:
                     i+=1
-            # extracted_gym_name = (text[(text.find('a previous victory at')+21):text.find('Please visit the Gym')])
+
             print("\n\n\n")
             print("--------------------------------------")
             print("DATE ->    " + extractedDate)
@@ -195,10 +155,6 @@ if not monthFound:
     print("searching for possible matches -> ")
 
     for month in months:
-
-            # rawText = rawText.join("")
-            # strippedText = [line for line in rawText if line.strip()]
-            # print(rawText)
 
             i=0
             extractedDate = "not set"
