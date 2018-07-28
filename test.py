@@ -187,69 +187,69 @@
 #             _MONTH = month
 #             monthFound = True
 
-print("month set as " + _MONTH)
-print("starting loop to set gym")
-rawText = rawText.split("\n")
-print("raw text -> ")
-print(rawText)
-print("stripped text")
-strippedText = [line for line in rawText if line.strip()]
-print(strippedText)
-i=0
-extractedGym = "not set"
-print("loop for gym")
-for chunk in strippedText:
+# print("month set as " + _MONTH)
+# print("starting loop to set gym")
+# rawText = rawText.split("\n")
+# print("raw text -> ")
+# print(rawText)
+# print("stripped text")
+# strippedText = [line for line in rawText if line.strip()]
+# print(strippedText)
+# i=0
+# extractedGym = "not set"
+# print("loop for gym")
+# for chunk in strippedText:
 
-    if _MONTH in chunk:
-        print()
-        extractedGym = strippedText[i+1]
-    else:
-        i+=1
+#     if _MONTH in chunk:
+#         print()
+#         extractedGym = strippedText[i+1]
+#     else:
+#         i+=1
 
-print("loop has found possible gym -> " + extractedGym)
-_GYM = extractedGym
+# print("loop has found possible gym -> " + extractedGym)
+# _GYM = extractedGym
 
-print("finished with text extraction")
-print("_GYM (verification needed still)-> " + _GYM)
-print("_DATE -> " + _DATE)
-print("begin comparing gym names")
+# print("finished with text extraction")
+# print("_GYM (verification needed still)-> " + _GYM)
+# print("_DATE -> " + _DATE)
+# print("begin comparing gym names")
 
-checkDay = _DATE.split(" ")
-day = checkDay[1]
-try:
-    dayInt = int(day)
-except ValueError:
-    print("ERROR: unable to parse day -> " + day)
-    #  dm admin for verification
-
-
-GYMS = []
-with open("gyms.txt", mode="r") as infile:
-    reader = csv.reader(infile)
-    for row in reader:
-        GYMS.append(row[0])
+# checkDay = _DATE.split(" ")
+# day = checkDay[1]
+# try:
+#     dayInt = int(day)
+# except ValueError:
+#     print("ERROR: unable to parse day -> " + day)
+#     #  dm admin for verification
 
 
-matches = []
-for value in GYMS:
-    percentage = difflib.SequenceMatcher(None, _GYM, value).ratio()
-    if percentage > .9:
-        print(_GYM + "     " + str(percentage * 100)[:5] + "% match with  -> " + value)
-        matches.append(value)
+# GYMS = []
+# with open("gyms.txt", mode="r") as infile:
+#     reader = csv.reader(infile)
+#     for row in reader:
+#         GYMS.append(row[0])
 
 
-print('matches contains ' + str(len(matches)) + ' results')
-if len(matches) > 1:
+# matches = []
+# for value in GYMS:
+#     percentage = difflib.SequenceMatcher(None, _GYM, value).ratio()
+#     if percentage > .9:
+#         print(_GYM + "     " + str(percentage * 100)[:5] + "% match with  -> " + value)
+#         matches.append(value)
+
+
+# print('matches contains ' + str(len(matches)) + ' results')
+# if len(matches) > 1:
     
-    print("matching gyms: \n")
-    for k in matches:
-        print(k)
+#     print("matching gyms: \n")
+#     for k in matches:
+#         print(k)
         
 
-elif len(matches) == 1:
-    print("exactly one match -> ")
-    print(matches[0])
-elif len(matches) < 1:
-    print("no matches found.. sad day")
+# elif len(matches) == 1:
+#     print("exactly one match -> ")
+#     print(matches[0])
+# elif len(matches) < 1:
+#     print("no matches found.. sad day")
 
-print("\n\nDone.")
+# print("\n\nDone.")

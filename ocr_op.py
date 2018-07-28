@@ -265,22 +265,91 @@ def runDiffSeqMatch(rawText, month):
     return {"status":"error", "date": "not set", "rawText": rawText }    
 
 
+def verifyDay(date):
+    print("Checking DAY in date..")
+    checkDay = date.split(" ")
+    day = checkDay[1]
+    try:
+        dayInt = int(day)
+        print("day is number, valid result -> " + str(dayInt))
+        return {"status": "success" }
+    except ValueError:
+        print("ERROR: unable to parse day -> " + str(day))
+        return {"status": "error" }
+        #  dm admin for verification
+
+    
 
 
-
-def getGym(raw):
+def getGym(raw, date):
     print("getGym()")
-  
+    rawText = raw.split("\n")
+    print("raw text -> ")
+    print(rawText)
+    print("stripped text")
+    strippedText = [line for line in rawText if line.strip()]
+    print(strippedText)
+    i=0
+    extractedGym = "not set"
+    print("loop for gym")
+    date = date.split(" ")
+    _MONTH = date[0]
+    for chunk in strippedText:
+
+        if _MONTH in chunk:
+            print("month in chunk...")
+            print("extractedGym")
+            extractedGym = strippedText[i+1]
+            print(extractedGym)
+        else:
+            i+=1
+
+    print("loop has found possible gym -> " + extractedGym)
+    _GYM = extractedGym
+    print("_GYM (verification needed still) -> " + _GYM)
+    print("begin comparing gym names")
 
 
 
 
+    GYMS = []
+    with open("gyms.txt", mode="r") as infile:
+        reader = csv.reader(infile)
+        for row in reader:
+            GYMS.append(row[0])
 
 
+    matches = []
+    for value in GYMS:
+        percentage = difflib.SequenceMatcher(None, _GYM, value).ratio()
+        if percentage > .9:
+            print(_GYM + "     " + str(percentage * 100)[:5] + "% match with  -> " + value)
+            matches.append(value)
 
 
-  
+    print('matches contains ' + str(len(matches)) + ' results')
+    if len(matches) > 1:
+        
+        print("matching gyms: \n")
+        for k in matches:
+            print(k)
+            
 
+    elif len(matches) == 1:
+        print("exactly one match -> ")
+        print(matches[0])
+        return {"status": "success", "gym": matches[0]}
+    elif len(matches) < 1:
+        print("no matches found.. sad day")
+        return {"status": "error", "gym": "not found"}
+    elif len(matches) > 1:
+        print("More than one result found.... need to implement how to get exactly one result")
+        for match in matches:
+                print(match)
+        return {"status": "error", "gym": "multiple found"}
+
+
+    print("\n\nDone.")
     return True
 
 
@@ -298,14 +367,23 @@ def getGym(raw):
 
 print("opening image")
 # image = Image.open('/Users/MurphDogg/Desktop/image.png')
-image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
-# image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
+# image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
+image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
 
 
 croppedImg = cropAndContrast(image)
 raw = getRaw(croppedImg)
 results = getMonth(raw)
 _DATE = results['date']
+
+verifyDayResult = verifyDay(results['date'])
+if verifyDayResult["status"] == "success":
+    print("YYYYYAAAAAAAAAYYY success, day is valid")
+else:
+    print("BOOOOOOOOOOOOOOOO error, day is not valid")
+    print("DM admin...")
+
+
 print("--------------------------------------")
 print("--------------------------------------")
 print("results from getMonth()")
@@ -320,9 +398,12 @@ print("--------------------------------------")
 
 if results["status"] == "success":
    
-    _GYM = getGym(results["rawText"])
-
+    gymResults = getGym(results["rawText"], results["date"])
+    if gymResults["status"] == "success":
+        _GYM = gymResults["gym"]
     #    push to firebase
+    else:
+        print("SOMETHING IS WRONG. wtf")
 
 elif results["status"] == "error":
     print("\n\n")
