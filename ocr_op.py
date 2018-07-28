@@ -6,6 +6,8 @@ import csv
 import re
 import datetime
 import time
+# import operator
+import string
 
 m = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -294,19 +296,51 @@ def runDiffSeqMatch(rawText, month):
 
 
 @timeit
-def verifyDay(date):
+def verifyDate(date):
+    valid = True
+    print("verifying date")
+    splitDate = date.split(" ")
     print("Checking DAY in date..")
-    checkDay = date.split(" ")
-    day = checkDay[1]
+    month = splitDate[0]
+    day = splitDate[1]
+    hour = splitDate[2]
+    ampm = splitDate[3]
+
+    translator = str.maketrans('','',string.punctuation)
+    month = month.translate(translator)
+    day = day.translate(translator)
+    ampm = ampm.translate(translator)
+
+
+    regex = re.compile('^(([0-1]?[0-9])|([2][0-3])):([0-5]?[0-9])(:([0-5]?[0-9]))?$')
+    res = regex.match(hour)
+    if res is not None:
+        print("result is not none! valid hour")
+    else:
+        print("result is none! no bueno")
+        valid = False
+
     try:
         dayInt = int(day)
         print("day is number, valid result -> " + str(dayInt))
-        return {"status": "success" }
     except ValueError:
+        valid = False
         print("ERROR: unable to parse day -> " + str(day))
-        return {"status": "error" }
         #  dm admin for verification
+    
+    for char in ampm:
+        if char == "A" or char == "M" or char == "P":
+            break
+        else:
+            valid = False
 
+    if valid:
+        vDate = (month + " " + day + " " + hour + " " + ampm)
+        print("valid date -> " + vDate)
+        return {"status": "success", "date": vDate}
+    else:
+        print("invalid date -> " + date)
+        return {"status": "error", "date": date}
 
 
 
@@ -353,109 +387,118 @@ def getGym(raw, date):
     matches = []
     for value in GYMS:
         percentage = difflib.SequenceMatcher(None, _GYM, value).ratio()
-        if percentage > .9:
+        if percentage > .7:
             print(_GYM + "     " + str(percentage * 100)[:5] + "% match with  -> " + value)
-            matches.append(value)
+            matches.append({"gym": value, "percent": str(percentage * 100)[:6]})
 
 
     print('matches contains ' + str(len(matches)) + ' results')
     if len(matches) > 1:
         
-        print("matching gyms: \n")
+        print("\n\n\n\n\nMATCHING GYMS: \n")
         for k in matches:
-            print(k)
-            
+            print(k["gym"] + "  " + k["percent"])
+        
+        # maxResult = max(float(match["percent"]) for match in matches)
+        maxResult = max(matches, key = lambda m: float(m["percent"]))
 
-    elif len(matches) == 1:
+        print("best match from matches  ->  " + str(maxResult))
+        print("\n\n\n")
+        matches = []
+        matches.append(maxResult)
+
+    if len(matches) == 1:
         print("exactly one match -> ")
-        print(matches[0])
-        return {"status": "success", "gym": matches[0]}
+        print(matches[0]["gym"])
+        return {"status": "success", "gym": matches[0]["gym"]}
     elif len(matches) < 1:
         print("no matches found.. sad day")
         return {"status": "error", "gym": "not found"}
-    elif len(matches) > 1:
-        print("More than one result found.... need to implement how to get exactly one result")
-        for match in matches:
-                print(match)
-        return {"status": "error", "gym": "multiple found"}
+   
 
 
     print("\n\nDone.")
-    return True
+    return {"status": "error", "gym": "multiple found"}
 
 
 
 
+def runThisShit(file):
+    print("hello from  ocr_op")
+    image = Image.open(file)
 
 
+    print("opening image")
+
+    # image = Image.open('/Users/MurphDogg/Desktop/image.png')
+    # image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
+    # image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
 
 
+    croppedImg = cropAndContrast(image)
+    raw = getRaw(croppedImg)
+    results = getMonth(raw)
+    # _DATE = results['date']
 
-
-# end of functions
-# START PROGRAM
-
-
-print("opening image")
-image = Image.open('/Users/MurphDogg/Desktop/image.png')
-# image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
-# image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
-
-
-croppedImg = cropAndContrast(image)
-raw = getRaw(croppedImg)
-results = getMonth(raw)
-_DATE = results['date']
-
-verifyDayResult = verifyDay(results['date'])
-if verifyDayResult["status"] == "success":
-    print("YYYYYAAAAAAAAAYYY success, day is valid")
-else:
-    print("BOOOOOOOOOOOOOOOO error, day is not valid")
-    print("DM admin...")
-
-
-print("--------------------------------------")
-print("--------------------------------------")
-print("results from getMonth()")
-print("results['status']")
-print(results['status'])
-print("results['date']")
-print(results['date'])
-print("results['rawText']")
-print(results['rawText'])
-print("--------------------------------------")
-print("--------------------------------------")
-
-if results["status"] == "success":
-   
-    gymResults = getGym(results["rawText"], results["date"])
-    if gymResults["status"] == "success":
-        _GYM = gymResults["gym"]
-    #    push to firebase
+    verifiedDateResult = verifyDate(results['date'])
+    if verifiedDateResult["status"] == "success":
+        print("YYYYYAAAAAAAAAYYY success, day is valid")
+        _DATE = verifiedDateResult["date"]
     else:
-        print("SOMETHING IS WRONG. wtf")
+        print("BOOOOOOOOOOOOOOOO error, date is not valid -> " + verifiedDateResult["date"])
+        print("DM admin...")
 
-elif results["status"] == "error":
-    print("\n\n")
+
     print("--------------------------------------")
-    print("unable to process screenshot       -> ")
     print("--------------------------------------")
-    print("status -> ")
-    print(raw["status"])
+    print("results from getMonth()")
+    print("results['status']")
+    print(results['status'])
+    print("results['date']")
+    print(results['date'])
+    print("results['rawText']")
+    print(results['rawText'])
     print("--------------------------------------")
-    print("rawtext -> ")
-    print(raw["rawText"])
     print("--------------------------------------")
+
+    if results["status"] == "success":
     
+        gymResults = getGym(results["rawText"], results["date"])
+        if gymResults["status"] == "success":
+            _GYM = gymResults["gym"]
+        #    push to firebase
+        elif gymResults["status"] == "error":
+            _GYM = gymResults["gym"]
+        #    push to firebase
+        else:
+            print("SOMETHING IS WRONG. wtf")
 
-    #    DM admin    do not push to firebase
-print("\n\nfinished.")
-print("performance summary: ")
-for entry in performanceSummary:
-    print(entry)
-print("\n\nfinal result -> ")
-print("_DATE")
-print(_DATE)
-print("_GYM")
-print(_GYM)
+    elif results["status"] == "error":
+        print("\n\n")
+        print("--------------------------------------")
+        print("unable to process screenshot       -> ")
+        print("--------------------------------------")
+        print("status -> ")
+        print(raw["status"])
+        print("--------------------------------------")
+        print("rawtext -> ")
+        print(raw["rawText"])
+        print("--------------------------------------")
+        
+
+        #    DM admin    do not push to firebase
+    print("\n\nfinished.")
+    # print("performance summary: ")
+    # for entry in performanceSummary:
+    #     print(entry)
+    # print("\n\nfinal result -> ")
+
+
+    print("_DATE")
+    print(_DATE)
+    print("_GYM")
+    print(_GYM)
+
+
+
+    return {"date": _DATE, "gym": _GYM }
