@@ -5,6 +5,7 @@ import difflib
 import csv
 import re
 import datetime
+import time
 
 m = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -15,6 +16,9 @@ print("_CURRENT_MONTH: " + _CURRENT_MONTH)
 _MONTH = "not set"
 _GYM = "not set"
 _DATE = "not set"
+
+performanceSummary = []
+
 
 months = {
             'January': 'enero',
@@ -43,9 +47,27 @@ realisticMonthsSPN.append(months[_NEXT_MONTH])
 print("this is a list of possible months -> ")
 print(str(realisticMonthsENG))
 print(str(realisticMonthsSPN))
+
 # functions
 
 
+
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        print('%r  %2.2f ms' % (method.__name__, (te - ts) * 1000))
+        performanceStamp = ('%r  %2.2f ms' % (method.__name__, (te - ts) * 1000))
+        performanceSummary.append(performanceStamp)
+        return result
+    return timed
+
+
+
+
+@timeit
 def cropAndContrast(image):
     print("cropping")
     originalWidth = image.size[0]
@@ -77,6 +99,9 @@ def cropAndContrast(image):
 
 
 
+
+
+@timeit
 def getRaw(img):
     print("getRaw()")
     rawText = pytesseract.image_to_string(img, config ='--psm 6')
@@ -84,6 +109,8 @@ def getRaw(img):
 
 
 
+
+@timeit
 def getMonth(rawText):
     print("getMonthFromRaw()")
     monthFound = False
@@ -220,7 +247,7 @@ def getMonth(rawText):
 
 
 
-
+@timeit
 def runDiffSeqMatch(rawText, month):
     print("\n\n\n\nentering the runDiffSeqMatch()")
     extractedDate = "not set"
@@ -265,6 +292,8 @@ def runDiffSeqMatch(rawText, month):
     return {"status":"error", "date": "not set", "rawText": rawText }    
 
 
+
+@timeit
 def verifyDay(date):
     print("Checking DAY in date..")
     checkDay = date.split(" ")
@@ -278,9 +307,11 @@ def verifyDay(date):
         return {"status": "error" }
         #  dm admin for verification
 
-    
 
 
+
+
+@timeit
 def getGym(raw, date):
     print("getGym()")
     rawText = raw.split("\n")
@@ -366,9 +397,9 @@ def getGym(raw, date):
 
 
 print("opening image")
-# image = Image.open('/Users/MurphDogg/Desktop/image.png')
+image = Image.open('/Users/MurphDogg/Desktop/image.png')
 # image = Image.open('/Users/MurphDogg/Desktop/image.jpg')
-image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
+# image = Image.open('/Users/MurphDogg/Desktop/spanish.png')
 
 
 croppedImg = cropAndContrast(image)
@@ -420,6 +451,10 @@ elif results["status"] == "error":
 
     #    DM admin    do not push to firebase
 print("\n\nfinished.")
+print("performance summary: ")
+for entry in performanceSummary:
+    print(entry)
+print("\n\nfinal result -> ")
 print("_DATE")
 print(_DATE)
 print("_GYM")
